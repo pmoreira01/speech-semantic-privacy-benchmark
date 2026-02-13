@@ -1,0 +1,9 @@
+data/raw/
+data/processed/
+runs/
+__pycache__/
+.venv/
+.ipynb_checkpoints/
+*.pt
+*.bin
+*.spacy
