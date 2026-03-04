@@ -1,0 +1,32 @@
+{
+  "ne_1111": "PER",
+  "ne_1112": "PER",
+  "ne_1113": "PER",
+  "ne_1114": "PER",
+  "ne_112":  "PER",
+
+  "ne_13": "LOC",
+  "ne_14": "ORG",
+
+  "ne_22": "DATE",
+  "ne_23": "TIME",
+
+  "ne_31": "MONEY",
+  "ne_33": "PERCENT",
+
+  "ne_32": "CARDINAL",
+  "ne_34": "CARDINAL",
+
+  "ne_113": "MISC",
+  "ne_21":  "MISC",
+  "ne_41":  "MISC",
+  "ne_42":  "MISC",
+  "ne_43":  "MISC",
+  "ne_44":  "MISC",
+  "ne_45":  "MISC",
+  "ne_46":  "MISC",
+  "ne_47":  "MISC",
+  "ne_50":  "MISC",
+  "ne_60":  "MISC",
+  "ne_70":  "MISC"
+}
