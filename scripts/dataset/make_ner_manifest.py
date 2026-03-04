@@ -91,7 +91,7 @@ def validate_entity(text: str, ent: dict) -> Tuple[bool, str]:
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--truth-dir", type=Path, default=Path("data/processed/meetings"))
-    ap.add_argument("--out", type=Path, default=Path("data/processed/manifests/ner_gold_reference.jsonl"))
+    ap.add_argument("--out", type=Path, default=Path("data/processed/manifests/ner_manifest.jsonl"))
 
     ap.add_argument(
         "--label-policy",
@@ -125,6 +125,9 @@ def main() -> None:
         if args.meetings and meeting_id not in set(args.meetings):
             continue
 
+        meeting_rows: List[dict] = []
+        meeting_has_any_entity = False
+
         for utt in meeting.get("utterances", []):
             if args.skip_overlap and bool(utt.get("overlap", False)):
                 continue
@@ -153,7 +156,6 @@ def main() -> None:
                         raise RuntimeError(
                             f"Invalid entity in {meeting_id} {utt.get('utterance_id')}: {reason}. Entity={ent}"
                         )
-                    # drop invalid entity
                     continue
 
                 ents_out.append(
@@ -166,10 +168,14 @@ def main() -> None:
                     }
                 )
 
+            # Track whether this meeting has any *valid* entity anywhere
+            if ents_out:
+                meeting_has_any_entity = True
+
             if len(ents_out) < args.min_entities:
                 continue
 
-            rows.append(
+            meeting_rows.append(
                 {
                     "meeting_id": meeting_id,
                     "segment_id": utt["utterance_id"],
@@ -181,6 +187,12 @@ def main() -> None:
                     "overlap": bool(utt.get("overlap", False)),
                 }
             )
+
+        # Only include this meeting if it has at least one annotated entity
+        if not meeting_has_any_entity:
+            continue
+
+        rows.extend(meeting_rows)
 
     write_jsonl(args.out, rows)
     print(f"Wrote {len(rows)} NER examples -> {args.out}")

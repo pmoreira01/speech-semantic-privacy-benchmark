@@ -78,13 +78,13 @@ def main() -> None:
     ap.add_argument(
         "--audio-condition",
         type=str,
-        default="IHM",
+        default="Mix-Headset",
         help="Audio condition label to write into manifest (e.g., IHM, SDM, MDM).",
     )
     ap.add_argument(
         "--audio-path-template",
         type=str,
-        default=None,
+        default="data/raw/audio/{meeting_id}.{condition}.wav",
         help=(
             "Template to build audio path from meeting_id, e.g. "
             "'data/raw/ami/{meeting_id}/audio/{condition}.wav' or "

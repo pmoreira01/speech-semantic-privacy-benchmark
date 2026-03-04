@@ -801,7 +801,7 @@ def build_meeting_truth(
 
 def parse_args() -> argparse.Namespace:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--ami-root", type=Path, required=True, help="Root of AMI distribution (recursive search).")
+    ap.add_argument("--ami-root", type=Path, default=Path("data/raw/amicorpus"), help="Root of AMI distribution (recursive search).")
     ap.add_argument("--out-dir", type=Path, default=Path("data/processed/meetings"), help="Output directory for truth JSON.")
     ap.add_argument("--meetings", nargs="*", default=None, help="Meeting IDs to process; if omitted, process all found in words.xml.")
     ap.add_argument("--ne", action="store_true", help="Try to attach named entities if NE files exist.")

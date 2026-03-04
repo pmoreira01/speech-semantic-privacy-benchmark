@@ -1,9 +1,9 @@
 import json
 from pathlib import Path
 
-MANIFEST_IN = "../../data/processed/manifests/ner_gold_reference.jsonl"
-MANIFEST_OUT = "../../data/processed/manifests/ner_gold_reference_mapped.jsonl"
-MAP_FILE = "ami_to_std.json"
+MANIFEST_IN = "data/processed/manifests/ner_manifest.jsonl"
+MANIFEST_OUT = "data/processed/manifests/ner_manifest_mapped.jsonl"
+MAP_FILE = "scripts/dataset/ami_to_std.json"
 
 # Policy:
 # - "keep": keep all entities but add std_label (unknown -> "MISC")
