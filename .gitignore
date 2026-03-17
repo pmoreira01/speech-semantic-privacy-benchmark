@@ -9,3 +9,5 @@ __pycache__/
 *.pt
 *.bin
 *.spacy
+scripts/ner_models/llm_prompted_ner/ollama/
+scripts/ner_models/rule_based/philter/

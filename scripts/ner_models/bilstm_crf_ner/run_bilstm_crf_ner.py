@@ -86,7 +86,7 @@ if __name__ == "__main__":
     import argparse
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--manifest_in", required=True, help="Input AMI JSONL manifest")
+    parser.add_argument("--manifest_in", default="data/processed/manifests/ner_manifest.jsonl", help="Input AMI JSONL manifest")
     parser.add_argument("--manifest_out", required=True, help="Output JSONL predictions")
     parser.add_argument("--model", default="ner", help='Flair model: "ner" or "ner-fast"')
     parser.add_argument("--no_text", action="store_true", help="Do not include the original text in output")
