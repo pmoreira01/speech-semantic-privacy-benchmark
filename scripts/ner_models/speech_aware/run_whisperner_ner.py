@@ -49,22 +49,22 @@ def load_audio_segment(audio_path: Path, start_time: float, end_time: float, tar
     return segment, sr
 
 
-def parse_whisperner_output(text: str) -> List[Dict[str, Any]]:
+def parse_whisperner_output(text: str):
     """
-    Best-effort parser for tagged WhisperNER output.
-    Adjust this if you inspect a few outputs and find a different tag format.
-    Expected likely patterns:
-      <person> David </person>
-      <company> Microsoft </company>
+    Handles WhisperNER format like:
+    <time>25 minutes<time>
+    <person>David<person>
     """
+    import re
+
     entities = []
 
-    # pattern like <person>David</person> or <person> David </person>
-    pattern = re.compile(r"<\s*([^>\s]+)\s*>(.*?)<\s*/\s*\1\s*>", flags=re.IGNORECASE | re.DOTALL)
+    pattern = re.compile(r"<([^>\s]+)>(.*?)<\1>", re.IGNORECASE | re.DOTALL)
 
-    for m in pattern.finditer(text):
-        label = m.group(1).strip()
-        ent_text = m.group(2).strip()
+    for match in pattern.finditer(text):
+        label = match.group(1).strip()
+        ent_text = match.group(2).strip()
+
         if ent_text:
             entities.append({
                 "label": label,

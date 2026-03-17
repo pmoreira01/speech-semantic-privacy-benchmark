@@ -1,0 +1,5 @@
+{"meeting_id":"TEST1","segment_id":"TEST1_0001","speaker_id":"A","start_time":0.0,"end_time":2.0,"text":"Hi, I'm David and I work at Microsoft.","entities":[],"overlap":false}
+{"meeting_id":"TEST1","segment_id":"TEST1_0002","speaker_id":"B","start_time":2.0,"end_time":4.0,"text":"We will meet in London tomorrow.","entities":[],"overlap":false}
+{"meeting_id":"TEST1","segment_id":"TEST1_0003","speaker_id":"C","start_time":4.0,"end_time":6.0,"text":"The meeting starts at 3 pm.","entities":[],"overlap":false}
+{"meeting_id":"TEST1","segment_id":"TEST1_0004","speaker_id":"D","start_time":6.0,"end_time":8.0,"text":"John paid 50 dollars for the device.","entities":[],"overlap":false}
+{"meeting_id":"TEST1","segment_id":"TEST1_0005","speaker_id":"A","start_time":8.0,"end_time":10.0,"text":"Okay.","entities":[],"overlap":false}
