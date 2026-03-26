@@ -11,3 +11,4 @@ __pycache__/
 *.spacy
 scripts/ner_models/llm_prompted_ner/ollama/
 scripts/ner_models/rule_based/philter/
+pretrained_asr_speechbrain/
