@@ -126,29 +126,55 @@ def main():
         #},
 
         # Other backends supported by the updated script
-        {
-            "backend": "speechbrain",
-            "model": "speechbrain/asr-crdnn-rnnlm-librispeech",
-            "extra": {
-                "overwrite": True,
-            },
-        },
-        {
-            "backend": "wav2vec2",
-            "model": "facebook/wav2vec2-large-960h-lv60-self",
-            "extra": {
-                "overwrite": True,
-            },
-        },
+        #{
+        #    "backend": "speechbrain",
+        #    "model": "speechbrain/asr-crdnn-rnnlm-librispeech",
+        #    "extra": {
+        #        "overwrite": True,
+        #    },
+        #},
+        #{
+        #    "backend": "wav2vec2",
+        #    "model": "facebook/wav2vec2-large-960h-lv60-self",
+        #    "extra": {
+        #        "overwrite": True,
+        #    },
+        #},
 
         # Only keep this if run_asr.py supports "canary"
-        # {
+        #{
         #     "backend": "canary",
         #     "model": "nvidia/canary-1b-v2",
         #     "extra": {
         #         "overwrite": True,
         #     },
-        # },
+        #},
+        {
+            "backend": "whisperx",
+            "model": "small",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+                "word_timestamps": True,
+            },
+        },
+        {
+            "backend": "whisperx",
+            "model": "small",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+            },
+        },
+        {
+            "backend": "conformer_ctc",
+            "model": "stt_en_conformer_ctc_large",
+            "extra": {
+                "overwrite": True,
+            },
+        },
     ]
 
     for exp in experiments:

@@ -129,16 +129,21 @@ def build_backend(args):
     if backend == "wav2vec2":
         from transformers import pipeline
 
-        hf_device = 0 if args.device == "cuda" else -1
+        device_id = 0 if str(args.device).startswith("cuda") else -1
+
         asr_pipe = pipeline(
             "automatic-speech-recognition",
             model=args.model,
-            device=hf_device,
+            framework="pt",
+            device=device_id,
         )
 
         def transcribe_fn(audio_segment: np.ndarray, sr: int) -> Dict[str, Any]:
-            result = asr_pipe({"array": audio_segment, "sampling_rate": sr})
-            return {"text": result["text"].strip()}
+            out = asr_pipe(
+                {"raw": audio_segment, "sampling_rate": sr}
+            )
+            text = out["text"] if isinstance(out, dict) else str(out)
+            return {"text": text.strip()}
 
         return transcribe_fn
 
@@ -158,6 +163,123 @@ def build_backend(args):
                 sf.write(tmp.name, audio_segment, sr)
                 text = asr_model.transcribe_file(tmp.name).strip()
             return {"text": text}
+
+        return transcribe_fn
+    
+    if backend == "canary":
+        import nemo.collections.asr as nemo_asr
+    
+        model = nemo_asr.models.ASRModel.from_pretrained(model_name=args.model)
+        model = model.to(args.device)
+        model.eval()
+    
+        def transcribe_fn(audio_segment: np.ndarray, sr: int) -> Dict[str, Any]:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as tmp:
+                sf.write(tmp.name, audio_segment, sr)
+    
+                outputs = model.transcribe([tmp.name])
+    
+                hyp = outputs[0]
+    
+                # Handle both possible return types (depends on config/version)
+                if hasattr(hyp, "text"):
+                    text = hyp.text
+                else:
+                    text = str(hyp)
+    
+            return {"text": text.strip()}
+    
+        return transcribe_fn
+        
+    if backend == "whisperx":
+        import whisperx
+
+        device = args.device
+        compute_type = args.compute_type
+
+        # WhisperX uses Whisper for transcription, then a separate alignment model.
+        asr_model = whisperx.load_model(
+            args.model,
+            device=device,
+            compute_type=compute_type,
+            language=args.language,
+        )
+
+        align_model = None
+        align_metadata = None
+
+        def transcribe_fn(audio_segment: np.ndarray, sr: int) -> Dict[str, Any]:
+            nonlocal align_model, align_metadata
+
+            audio_segment = np.asarray(audio_segment, dtype=np.float32)
+
+            # Step 1: transcribe
+            result = asr_model.transcribe(audio_segment, batch_size=1)
+
+            # Step 2: lazy-load alignment model for the detected/requested language
+            language_code = result.get("language") or args.language
+            if align_model is None:
+                align_model, align_metadata = whisperx.load_align_model(
+                    language_code=language_code,
+                    device=device,
+                )
+
+            # Step 3: align to get improved segment + word timestamps
+            aligned = whisperx.align(
+                result["segments"],
+                align_model,
+                align_metadata,
+                audio_segment,
+                device,
+                return_char_alignments=False,
+            )
+
+            out = {
+                "text": " ".join(
+                    (seg.get("text") or "").strip()
+                    for seg in aligned.get("segments", [])
+                    if (seg.get("text") or "").strip()
+                ).strip()
+            }
+
+            words = aligned.get("word_segments", [])
+            if words:
+                out["words"] = [
+                    {
+                        "word": w.get("word"),
+                        "start": w.get("start"),
+                        "end": w.get("end"),
+                        "score": w.get("score"),
+                    }
+                    for w in words
+                    if w.get("word") is not None
+                ]
+
+            return out
+
+        return transcribe_fn
+
+    if backend == "conformer_ctc":
+        import nemo.collections.asr as nemo_asr
+
+        model = nemo_asr.models.EncDecCTCModelBPE.from_pretrained(model_name=args.model)
+        model = model.to(args.device)
+        model.eval()
+
+        def transcribe_fn(audio_segment: np.ndarray, sr: int) -> Dict[str, Any]:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=True) as tmp:
+                sf.write(tmp.name, audio_segment, sr)
+
+                outputs = model.transcribe(
+                    [tmp.name],
+                    batch_size=1,
+                    verbose=False,
+                )
+
+                pred = outputs[0]
+                text = getattr(pred, "text", pred)
+
+            return {"text": str(text).strip()}
 
         return transcribe_fn
 
@@ -196,7 +318,11 @@ def main():
     parser.add_argument("--manifest_in", required=True)
     parser.add_argument("--manifest_out", required=True)
 
-    parser.add_argument("--backend", required=True, choices=["whisper", "wav2vec2", "speechbrain"])
+    parser.add_argument(
+        "--backend",
+        required=True,
+        choices=["whisper", "whisperx", "wav2vec2", "speechbrain", "canary", "conformer_ctc"],
+    )
     parser.add_argument("--model", required=True)
     parser.add_argument("--device", default="cpu")
     parser.add_argument("--compute_type", default="int8")
@@ -220,8 +346,8 @@ def main():
 
     args = parser.parse_args()
 
-    if args.word_timestamps and args.backend != "whisper":
-        raise ValueError("--word_timestamps is only supported with --backend whisper")
+    if args.word_timestamps and args.backend not in {"whisper", "whisperx"}:
+        raise ValueError("--word_timestamps is only supported with --backend whisper or whisperx")
 
     manifest_in = Path(args.manifest_in)
     manifest_out = Path(args.manifest_out)
@@ -274,7 +400,7 @@ def main():
                 out_rec["asr_text"] = asr_result.get("text", "")
                 out_rec["latency_ms"] = latency_ms
 
-                if args.backend == "whisper" and args.word_timestamps:
+                if args.backend in {"whisper", "whisperx"} and "words" in asr_result:
                     out_rec["word_timestamps"] = asr_result.get("words", [])
 
             except Exception as e:
