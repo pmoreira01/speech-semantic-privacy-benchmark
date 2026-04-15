@@ -21,11 +21,12 @@ def main():
     out_dir.mkdir(parents=True, exist_ok=True)
 
     models = [
-        "ner",
-        "ner-fast",
-        "ner-large",
-        "flair/ner-english-ontonotes",
-        "flair/ner-english-large",
+        #"ner",
+        #"ner-fast",
+        #"ner-large",
+        #"flair/ner-english-ontonotes",
+        #"flair/ner-english-large",
+        "flair/ner-english-ontonotes-large",
     ]
 
     for model_id in models:

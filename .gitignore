@@ -1,6 +1,4 @@
-data/raw/
-data/processed/meetings/
-data/misc/
+data/
 runs/
 __pycache__/
 .venv/
