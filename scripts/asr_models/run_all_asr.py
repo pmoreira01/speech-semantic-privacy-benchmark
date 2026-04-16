@@ -25,12 +25,12 @@ RUN_ONLY = [
 def main():
     runner = "scripts/asr_models/run_asr.py"
 
-    manifest_in = "data/processed/manifests/asr_manifest_sample20k.jsonl"
+    manifest_in = "data/processed/manifests/asr_manifest.jsonl"
     out_dir = Path("data/processed/asr_predictions")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     device = "cuda"  # "cuda" or "cpu"
-    whisper_compute_type = "float16" if device == "cuda" else "int8"
+    whisper_compute_type = "int8_float16" if device == "cuda" else "int8"
 
     experiments = [
         # --- Existing ---
