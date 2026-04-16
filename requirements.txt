@@ -1,6 +1,26 @@
+# Core
 torch
+torchaudio
 transformers
-flair
 tqdm
 requests
+numpy
+scipy
+soundfile
 tf-keras
+
+# BiLSTM-CRF
+flair
+
+# ASR backends
+faster-whisper
+whisperx
+speechbrain
+nemo_toolkit[asr]
+
+# Zero-shot NER
+gliner
+spacy
+presidio-analyzer
+presidio-anonymizer
+pii-masker
