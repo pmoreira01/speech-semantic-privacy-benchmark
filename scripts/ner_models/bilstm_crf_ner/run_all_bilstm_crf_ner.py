@@ -5,6 +5,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from utils import run_subprocess, safe_name
 
 
+# Leave empty to run all models, or list model IDs to run only those.
+RUN_ONLY = [
+    # "flair/ner-english-ontonotes-large",
+]
+
+
 def main():
     runner = "scripts/ner_models/bilstm_crf_ner/run_bilstm_crf_ner.py"
 
@@ -14,6 +20,9 @@ def main():
     models = [
         "flair/ner-english-ontonotes-large",
     ]
+
+    if RUN_ONLY:
+        models = [m for m in models if m in RUN_ONLY]
 
     for model_id in models:
         out_file = out_dir / f"{safe_name(model_id)}_predictions.jsonl"

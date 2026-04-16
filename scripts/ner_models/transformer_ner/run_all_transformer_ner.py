@@ -5,6 +5,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from utils import run_subprocess, safe_name
 
 
+# Leave empty to run all models, or list model IDs to run only those.
+RUN_ONLY = [
+    # "dslim/bert-base-NER",
+    # "Jean-Baptiste/roberta-large-ner-english",
+]
+
+
 def main():
     runner = "scripts/ner_models/transformer_ner/run_transformer_ner.py"
 
@@ -22,6 +29,9 @@ def main():
         "nickprock/bert-finetuned-ner-ontonotes",
         "nickprock/distilbert-finetuned-ner-ontonotes",
     ]
+
+    if RUN_ONLY:
+        models = [m for m in models if m in RUN_ONLY]
 
     for model_id in models:
         out_file = out_dir / f"{safe_name(model_id)}_predictions.jsonl"

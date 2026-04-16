@@ -5,6 +5,23 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from utils import run_subprocess, safe_name
 
 
+# Leave empty to run all experiments, or list experiment names to run only those.
+RUN_ONLY = [
+    # "whisperx_small_word",
+    # "whisperx_small",
+    # "conformer_ctc_large",
+    # "whisper_large-v3-turbo_word",
+    # "whisper_large-v3-turbo",
+    # "whisper_distil-large-v3_word",
+    # "whisper_distil-large-v3",
+    # "parakeet_tdt",
+    # "parakeet_ctc",
+    # "whisperx_large-v3-turbo_word",
+    # "whisperx_distil-large-v3_word",
+    # "whisper_medium.en_word",
+]
+
+
 def main():
     runner = "scripts/asr_models/run_asr.py"
 
@@ -18,6 +35,7 @@ def main():
     experiments = [
         # --- Existing ---
         {
+            "name": "whisperx_small_word",
             "backend": "whisperx",
             "model": "small",
             "extra": {
@@ -28,6 +46,7 @@ def main():
             },
         },
         {
+            "name": "whisperx_small",
             "backend": "whisperx",
             "model": "small",
             "extra": {
@@ -37,6 +56,7 @@ def main():
             },
         },
         {
+            "name": "conformer_ctc_large",
             "backend": "conformer_ctc",
             "model": "stt_en_conformer_ctc_large",
             "extra": {
@@ -46,6 +66,7 @@ def main():
 
         # --- Whisper large-v3-turbo (faster large-v3 with ~4x fewer decoder layers) ---
         {
+            "name": "whisper_large-v3-turbo_word",
             "backend": "whisper",
             "model": "large-v3-turbo",
             "extra": {
@@ -56,6 +77,7 @@ def main():
             },
         },
         {
+            "name": "whisper_large-v3-turbo",
             "backend": "whisper",
             "model": "large-v3-turbo",
             "extra": {
@@ -67,6 +89,7 @@ def main():
 
         # --- Distil-Whisper large-v3 (~6x faster distillation of large-v3) ---
         {
+            "name": "whisper_distil-large-v3_word",
             "backend": "whisper",
             "model": "distil-large-v3",
             "extra": {
@@ -77,6 +100,7 @@ def main():
             },
         },
         {
+            "name": "whisper_distil-large-v3",
             "backend": "whisper",
             "model": "distil-large-v3",
             "extra": {
@@ -88,6 +112,7 @@ def main():
 
         # --- Parakeet TDT 1.1B (NVIDIA transducer, strong on conversational speech) ---
         {
+            "name": "parakeet_tdt",
             "backend": "canary",
             "model": "nvidia/parakeet-tdt-1.1b",
             "extra": {
@@ -97,6 +122,7 @@ def main():
 
         # --- Parakeet CTC 1.1B (NVIDIA CTC variant, faster decoding) ---
         {
+            "name": "parakeet_ctc",
             "backend": "canary",
             "model": "nvidia/parakeet-ctc-1.1b",
             "extra": {
@@ -106,6 +132,7 @@ def main():
 
         # --- WhisperX large-v3-turbo (forced alignment gives better timestamps than built-in) ---
         {
+            "name": "whisperx_large-v3-turbo_word",
             "backend": "whisperx",
             "model": "large-v3-turbo",
             "extra": {
@@ -118,6 +145,7 @@ def main():
 
         # --- WhisperX distil-large-v3 (fastest option with forced alignment) ---
         {
+            "name": "whisperx_distil-large-v3_word",
             "backend": "whisperx",
             "model": "distil-large-v3",
             "extra": {
@@ -130,6 +158,7 @@ def main():
 
         # --- Whisper medium.en (English-only; better WER than multilingual medium on English data) ---
         {
+            "name": "whisper_medium.en_word",
             "backend": "whisper",
             "model": "medium.en",
             "extra": {
@@ -140,6 +169,9 @@ def main():
             },
         },
     ]
+
+    if RUN_ONLY:
+        experiments = [e for e in experiments if e["name"] in RUN_ONLY]
 
     for exp in experiments:
         backend = exp["backend"]

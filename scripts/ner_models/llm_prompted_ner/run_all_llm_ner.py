@@ -7,6 +7,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
 from utils import run_subprocess, safe_name
 
 
+# Leave empty to run all models, or list model names to run only those.
+RUN_ONLY = [
+    # "llama3.2:3b",
+    # "smollm2",
+    # "tinyllama",
+]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--out_dir", default="data/processed/ner_predictions/llm_prompted_ner")
@@ -29,6 +37,9 @@ def main():
         "smollm2",
         "tinyllama",
     ]
+
+    if RUN_ONLY:
+        models = [m for m in models if m in RUN_ONLY]
 
     for m in models:
         out_file = out_dir / f"{safe_name(m)}_predictions.jsonl"
