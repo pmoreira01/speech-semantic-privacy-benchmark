@@ -7,18 +7,18 @@ from utils import run_subprocess, safe_name
 
 # Leave empty to run all experiments, or list experiment names to run only those.
 RUN_ONLY = [
-    # "whisperx_small_word",
-    # "whisperx_small",
-    # "conformer_ctc_large",
-    # "whisper_large-v3-turbo_word",
-    # "whisper_large-v3-turbo",
-    # "whisper_distil-large-v3_word",
-    # "whisper_distil-large-v3",
-    # "parakeet_tdt",
-    # "parakeet_ctc",
-    # "whisperx_large-v3-turbo_word",
-    # "whisperx_distil-large-v3_word",
-    # "whisper_medium.en_word",
+    #"whisperx_small_word",
+    #"whisperx_small",
+    #"conformer_ctc_large",
+    "whisper_large-v3-turbo_word",
+    #"whisper_large-v3-turbo",
+    #"whisper_distil-large-v3_word",
+    #"whisper_distil-large-v3",
+    "parakeet_tdt",
+    "parakeet_ctc",
+    "whisperx_large-v3-turbo_word",
+    "whisperx_distil-large-v3_word",
+    "whisper_medium.en_word",
 ]
 
 

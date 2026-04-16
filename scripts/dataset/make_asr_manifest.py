@@ -84,7 +84,7 @@ def main() -> None:
     ap.add_argument(
         "--audio-path-template",
         type=str,
-        default="data/raw/audio/{meeting_id}.{condition}.wav",
+        default="data/raw/amicorpus/audio/{meeting_id}.{condition}.wav",
         help=(
             "Template to build audio path from meeting_id, e.g. "
             "'data/raw/ami/{meeting_id}/audio/{condition}.wav' or "
