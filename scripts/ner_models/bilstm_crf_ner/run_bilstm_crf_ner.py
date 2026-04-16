@@ -1,24 +1,14 @@
-import json
+import sys
 import time
+from pathlib import Path
 from typing import Any, Dict, List
 
 from tqdm import tqdm
 from flair.data import Sentence
 from flair.models import SequenceTagger
 
-
-def iter_jsonl(path: str):
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                yield json.loads(line)
-
-
-def write_jsonl(path: str, rows: List[Dict[str, Any]]):
-    with open(path, "w", encoding="utf-8") as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from utils import iter_jsonl, write_jsonl
 
 
 def main(

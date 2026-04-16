@@ -3,15 +3,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-
-def safe_name(model_id: str) -> str:
-    # "llama3.1:8b" -> "llama3.1_8b"
-    return model_id.replace("/", "_").replace(":", "_")
-
-
-def run(cmd: list[str]) -> None:
-    print("Running:", " ".join(cmd))
-    subprocess.run(cmd, check=True)
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from utils import run_subprocess, safe_name
 
 
 def main():
@@ -31,13 +24,7 @@ def main():
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # A reasonable local LLM coverage set (edit to match what you pulled in Ollama)
     models = [
-        #"llama3.1:8b",
-        #"mistral:7b",
-        #"qwen2.5:7b",
-        #"gemma2:9b",
-        #"phi3:mini",
         "llama3.2:3b",
         "smollm2",
         "tinyllama",
@@ -49,24 +36,22 @@ def main():
             print(f"Skipping existing: {out_file}")
             continue
 
-        cmd = [
-            sys.executable, runner,
+        cmd_args = [
             "--manifest_out", str(out_file),
             "--model", m,
             "--ollama_url", args.ollama_url,
             "--temperature", str(args.temperature),
             "--timeout_s", str(args.timeout_s),
             "--max_chars", str(args.max_chars),
-            #"--keep_raw"
         ]
         if args.num_ctx is not None:
-            cmd += ["--num_ctx", str(args.num_ctx)]
+            cmd_args += ["--num_ctx", str(args.num_ctx)]
 
         try:
-            run(cmd)
+            run_subprocess(runner, *cmd_args)
         except subprocess.CalledProcessError as e:
             if args.continue_on_fail:
-                print(f"❌ Model failed: {m} (continuing). Error: {e}")
+                print(f"Model failed: {m} (continuing). Error: {e}")
                 continue
             raise
 

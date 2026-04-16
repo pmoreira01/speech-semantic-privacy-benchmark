@@ -13,23 +13,24 @@ Entity format (consistent across all backends):
 
 Usage:
   # GLiNER (medium)
-  python run_ner_models.py --backend gliner --model urchade/gliner_medium-v2.1 --manifest_out results/gliner.jsonl
+  python run_zero_shot_ner.py --backend gliner --model urchade/gliner_medium-v2.1 --manifest_out results/gliner.jsonl
 
   # NuNER (GLiNER variant)
-  python run_ner_models.py --backend gliner --model numind/NuNER-zero --manifest_out results/nuner.jsonl
+  python run_zero_shot_ner.py --backend gliner --model numind/NuNER-zero --manifest_out results/nuner.jsonl
 
   # Custom GLiNER labels
-  python run_ner_models.py --backend gliner --gliner_labels '["person name","phone number","SSN"]' --manifest_out results/gliner_custom.jsonl
+  python run_zero_shot_ner.py --backend gliner --gliner_labels '["person name","phone number","SSN"]' --manifest_out results/gliner_custom.jsonl
 
   # HydroX PII Masker
-  python run_ner_models.py --backend hydrox --manifest_out results/hydrox.jsonl
+  python run_zero_shot_ner.py --backend hydrox --manifest_out results/hydrox.jsonl
 
   # Presidio + spaCy
-  python run_ner_models.py --backend presidio --manifest_out results/presidio.jsonl
+  python run_zero_shot_ner.py --backend presidio --manifest_out results/presidio.jsonl
 """
 
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -37,30 +38,14 @@ from typing import Any, Dict, List, Optional
 import torch
 from tqdm import tqdm
 
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from utils import iter_jsonl, write_jsonl
+
 
 def get_device() -> str:
     device = "cuda" if torch.cuda.is_available() else "cpu"
     print(f"Using device: {device}" + (f" ({torch.cuda.get_device_name(0)})" if device == "cuda" else ""))
     return device
-
-
-# ---------------------------------------------------------------------------
-# Manifest I/O (unchanged from your original)
-# ---------------------------------------------------------------------------
-
-def iter_jsonl(path: str):
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                yield json.loads(line)
-
-
-def write_jsonl(path: str, rows: List[Dict[str, Any]]):
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
 
 
 # ---------------------------------------------------------------------------
@@ -169,10 +154,6 @@ class HydroXBackend:
 # Backend: Microsoft Presidio + spaCy
 # ---------------------------------------------------------------------------
 
-# ---------------------------------------------------------------------------
-# Backend: Microsoft Presidio + spaCy
-# ---------------------------------------------------------------------------
- 
 # Entity types Presidio supports out of the box — add/remove as needed
 PRESIDIO_ENTITIES = [
     "PERSON",

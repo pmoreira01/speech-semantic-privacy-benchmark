@@ -1,12 +1,15 @@
 import argparse
-import json
 import re
+import sys
 import time
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import requests
 from tqdm import tqdm
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from utils import iter_jsonl, write_jsonl
 
 
 DEFAULT_GENERATE_URL = "http://localhost:11434/api/generate"
@@ -33,21 +36,6 @@ Rules:
 TEXT:
 {TEXT}
 """
-
-def iter_jsonl(path: str):
-    with open(path, "r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                yield json.loads(line)
-
-
-def write_jsonl(path: str, rows: List[Dict[str, Any]]):
-    Path(path).parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
-
 
 def extract_json_obj(text: str) -> Optional[dict]:
     if not text:

@@ -1,26 +1,18 @@
 import argparse
 import json
 import math
+import sys
 import tempfile
 import time
 from pathlib import Path
-from typing import Any, Dict, Iterator, Optional
+from typing import Any, Dict, Optional
 
 import numpy as np
 import soundfile as sf
 from tqdm import tqdm
 
-
-def iter_jsonl(path: Path) -> Iterator[Dict[str, Any]]:
-    with path.open("r", encoding="utf-8") as f:
-        for line_no, line in enumerate(f, start=1):
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                yield json.loads(line)
-            except json.JSONDecodeError as e:
-                raise ValueError(f"Invalid JSON on line {line_no} in {path}: {e}") from e
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from utils import iter_jsonl
 
 
 def append_jsonl(path: Path, row: Dict[str, Any]) -> None:

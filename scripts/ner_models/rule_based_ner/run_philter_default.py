@@ -1,28 +1,15 @@
 #!/usr/bin/env python3
 import argparse
-import json
 import shutil
 import subprocess
 import sys
 import time
 from difflib import SequenceMatcher
 from pathlib import Path
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, List
 
-
-def iter_jsonl(path: Path) -> Iterable[Dict[str, Any]]:
-    with path.open("r", encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if line:
-                yield json.loads(line)
-
-
-def write_jsonl(path: Path, rows: List[Dict[str, Any]]) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    with path.open("w", encoding="utf-8") as f:
-        for r in rows:
-            f.write(json.dumps(r, ensure_ascii=False) + "\n")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent.parent))
+from utils import iter_jsonl, write_jsonl
 
 
 def recover_phi_spans(original: str, redacted: str) -> List[Dict[str, Any]]:

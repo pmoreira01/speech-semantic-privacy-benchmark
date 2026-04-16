@@ -1,16 +1,8 @@
-import subprocess
 import sys
 from pathlib import Path
 
-
-def run(script: str, *args: str) -> None:
-    cmd = [sys.executable, script] + list(args)
-    print("Running:", " ".join(cmd))
-    subprocess.run(cmd, check=True)
-
-
-def safe_name(name: str) -> str:
-    return name.replace("/", "_").replace(":", "_").replace("+", "_").replace("__", "_")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from utils import run_subprocess, safe_name
 
 
 def main():
@@ -20,135 +12,11 @@ def main():
     out_dir = Path("data/processed/asr_predictions")
     out_dir.mkdir(parents=True, exist_ok=True)
 
-    # Adjust for your machine
     device = "cuda"  # "cuda" or "cpu"
-
     whisper_compute_type = "float16" if device == "cuda" else "int8"
 
     experiments = [
-        # Whisper variants without word timestamps
-        #{
-        #    "backend": "whisper",
-        #    "model": "tiny",
-        #    "extra": {
-        #        "compute_type": whisper_compute_type,
-        #        "language": "en",
-        #        "overwrite": True,
-        #    },
-        #},
-        #{
-        #    "backend": "whisper",
-        #    "model": "base",
-        #    "extra": {
-        #        "compute_type": whisper_compute_type,
-        #        "language": "en",
-        #        "overwrite": True,
-        #    },
-        #},
-        #{
-        #    "backend": "whisper",
-        #    "model": "small",
-        #    "extra": {
-        #        "compute_type": whisper_compute_type,
-        #        "language": "en",
-        #        "overwrite": True,
-        #    },
-        #},
-        #{
-        #    "backend": "whisper",
-        #    "model": "medium",
-        #    "extra": {
-        #        "compute_type": whisper_compute_type,
-        #        "language": "en",
-        #        "overwrite": True,
-        #    },
-        #},
-        #{
-        #    "backend": "whisper",
-        #    "model": "large-v3",
-        #    "extra": {
-        #        "compute_type": whisper_compute_type,
-        #        "language": "en",
-        #        "overwrite": True,
-        #    },
-        #},
-
-        # Whisper variants with word timestamps
-        #{
-        #    "backend": "whisper",
-        #    "model": "tiny",
-        #    "extra": {
-        #        "compute_type": whisper_compute_type,
-        #        "language": "en",
-        #        "word_timestamps": True,
-        #        "overwrite": True,
-        #    },
-        #},
-        #{
-        #    "backend": "whisper",
-        #    "model": "base",
-        #    "extra": {
-        #        "compute_type": whisper_compute_type,
-        #        "language": "en",
-        #        "word_timestamps": True,
-        #        "overwrite": True,
-        #    },
-        #},
-        #{
-        #    "backend": "whisper",
-        #    "model": "small",
-        #    "extra": {
-        #        "compute_type": whisper_compute_type,
-        #        "language": "en",
-        #        "word_timestamps": True,
-        #        "overwrite": True,
-        #    },
-        #},
-        #{
-        #    "backend": "whisper",
-        #    "model": "medium",
-        #    "extra": {
-        #        "compute_type": whisper_compute_type,
-        #        "language": "en",
-        #        "word_timestamps": True,
-        #        "overwrite": True,
-        #    },
-        #},
-        #{
-        #    "backend": "whisper",
-        #    "model": "large-v3",
-        #    "extra": {
-        #        "compute_type": whisper_compute_type,
-        #        "language": "en",
-        #        "word_timestamps": True,
-        #        "overwrite": True,
-        #    },
-        #},
-
-        # Other backends supported by the updated script
-        #{
-        #    "backend": "speechbrain",
-        #    "model": "speechbrain/asr-crdnn-rnnlm-librispeech",
-        #    "extra": {
-        #        "overwrite": True,
-        #    },
-        #},
-        #{
-        #    "backend": "wav2vec2",
-        #    "model": "facebook/wav2vec2-large-960h-lv60-self",
-        #    "extra": {
-        #        "overwrite": True,
-        #    },
-        #},
-
-        # Only keep this if run_asr.py supports "canary"
-        #{
-        #     "backend": "canary",
-        #     "model": "nvidia/canary-1b-v2",
-        #     "extra": {
-        #         "overwrite": True,
-        #     },
-        #},
+        # --- Existing ---
         {
             "backend": "whisperx",
             "model": "small",
@@ -175,6 +43,102 @@ def main():
                 "overwrite": True,
             },
         },
+
+        # --- Whisper large-v3-turbo (faster large-v3 with ~4x fewer decoder layers) ---
+        {
+            "backend": "whisper",
+            "model": "large-v3-turbo",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+                "word_timestamps": True,
+            },
+        },
+        {
+            "backend": "whisper",
+            "model": "large-v3-turbo",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+            },
+        },
+
+        # --- Distil-Whisper large-v3 (~6x faster distillation of large-v3) ---
+        {
+            "backend": "whisper",
+            "model": "distil-large-v3",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+                "word_timestamps": True,
+            },
+        },
+        {
+            "backend": "whisper",
+            "model": "distil-large-v3",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+            },
+        },
+
+        # --- Parakeet TDT 1.1B (NVIDIA transducer, strong on conversational speech) ---
+        {
+            "backend": "canary",
+            "model": "nvidia/parakeet-tdt-1.1b",
+            "extra": {
+                "overwrite": True,
+            },
+        },
+
+        # --- Parakeet CTC 1.1B (NVIDIA CTC variant, faster decoding) ---
+        {
+            "backend": "canary",
+            "model": "nvidia/parakeet-ctc-1.1b",
+            "extra": {
+                "overwrite": True,
+            },
+        },
+
+        # --- WhisperX large-v3-turbo (forced alignment gives better timestamps than built-in) ---
+        {
+            "backend": "whisperx",
+            "model": "large-v3-turbo",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+                "word_timestamps": True,
+            },
+        },
+
+        # --- WhisperX distil-large-v3 (fastest option with forced alignment) ---
+        {
+            "backend": "whisperx",
+            "model": "distil-large-v3",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+                "word_timestamps": True,
+            },
+        },
+
+        # --- Whisper medium.en (English-only; better WER than multilingual medium on English data) ---
+        {
+            "backend": "whisper",
+            "model": "medium.en",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+                "word_timestamps": True,
+            },
+        },
     ]
 
     for exp in experiments:
@@ -197,14 +161,13 @@ def main():
 
         for k, v in extra.items():
             flag = f"--{k}"
-
             if isinstance(v, bool):
                 if v:
                     cmd_args.append(flag)
             else:
                 cmd_args.extend([flag, str(v)])
 
-        run(runner, *cmd_args)
+        run_subprocess(runner, *cmd_args)
 
 
 if __name__ == "__main__":
