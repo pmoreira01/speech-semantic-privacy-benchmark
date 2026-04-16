@@ -16,6 +16,7 @@ flair
 faster-whisper
 whisperx
 speechbrain
+onnx>=1.14.0  # pin before nemo_toolkit to avoid source-build of onnx==1.10.0
 nemo_toolkit[asr]
 
 # Zero-shot NER
