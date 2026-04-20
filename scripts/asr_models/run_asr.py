@@ -382,8 +382,12 @@ def main():
                     target_sr=args.target_sr,
                 )
 
-                if len(audio_segment) == 0:
-                    raise ValueError("Empty audio segment")
+                min_samples = int(0.1 * args.target_sr)  # 100 ms minimum
+                if len(audio_segment) < min_samples:
+                    raise ValueError(
+                        f"Audio segment too short ({len(audio_segment)} samples, "
+                        f"minimum {min_samples})"
+                    )
 
                 t0 = time.perf_counter()
                 asr_result = transcribe_fn(audio_segment, sr)

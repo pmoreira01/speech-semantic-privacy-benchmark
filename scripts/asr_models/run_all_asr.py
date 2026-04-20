@@ -7,30 +7,31 @@ from utils import run_subprocess, safe_name
 
 # Leave empty to run all experiments, or list experiment names to run only those.
 RUN_ONLY = [
+    #"whisper_large-v3_word",
+    #"whisper_medium_word",
+    #"parakeet_tdt",
+    #"parakeet_ctc",
     #"whisperx_small_word",
     #"whisperx_small",
     #"conformer_ctc_large",
-    "whisper_large-v3-turbo_word",
+    #"whisper_large-v3-turbo_word",
     #"whisper_large-v3-turbo",
     #"whisper_distil-large-v3_word",
     #"whisper_distil-large-v3",
-    "parakeet_tdt",
-    "parakeet_ctc",
-    "whisperx_large-v3-turbo_word",
+    #"whisperx_large-v3-turbo_word",
     "whisperx_distil-large-v3_word",
-    "whisper_medium.en_word",
 ]
 
 
 def main():
     runner = "scripts/asr_models/run_asr.py"
 
-    manifest_in = "data/processed/manifests/asr_manifest.jsonl"
+    manifest_in = "data/processed/manifests/asr_manifest_grouped_sample.jsonl"
     out_dir = Path("data/processed/asr_predictions")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     device = "cuda"  # "cuda" or "cpu"
-    whisper_compute_type = "int8_float16" if device == "cuda" else "int8"
+    whisper_compute_type = "float16" if device == "cuda" else "int8"
 
     experiments = [
         # --- Existing ---
@@ -63,6 +64,28 @@ def main():
                 "overwrite": True,
             },
         },
+        {
+            "name": "whisper_large-v3_word",
+            "backend": "whisper",
+            "model": "large-v3",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+                "word_timestamps": True,
+            },
+        },
+        {
+            "name": "whisper_medium_word",
+            "backend": "whisper",
+            "model": "medium",
+            "extra": {
+                "compute_type": whisper_compute_type,
+                "language": "en",
+                "overwrite": True,
+                "word_timestamps": True,
+            },
+        },
 
         # --- Whisper large-v3-turbo (faster large-v3 with ~4x fewer decoder layers) ---
         {
@@ -86,6 +109,7 @@ def main():
                 "overwrite": True,
             },
         },
+
 
         # --- Distil-Whisper large-v3 (~6x faster distillation of large-v3) ---
         {
