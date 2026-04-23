@@ -35,9 +35,12 @@ def write_jsonl(path, rows):
 
 def merge_group(group: List[Dict[str, Any]]) -> Dict[str, Any]:
     first, last = group[0], group[-1]
+    # Suffix merged groups so the ID is distinguishable from an ungrouped utterance
+    # and can't silently collide when joined against the original manifest.
+    seg_id = first["segment_id"] if len(group) == 1 else f"{first['segment_id']}__grp{len(group)}"
     return {
         "meeting_id":       first["meeting_id"],
-        "segment_id":       first["segment_id"],
+        "segment_id":       seg_id,
         "speaker_id":       first["speaker_id"],
         "start_time":       first["start_time"],
         "end_time":         last["end_time"],
@@ -71,8 +74,16 @@ def group_utterances(records, min_dur, max_dur, gap_thresh):
         gap           = float(rec["start_time"]) - float(prev["end_time"])
         current_dur   = float(prev["end_time"]) - float(current_group[0]["start_time"])
         would_exceed  = current_dur + dur > max_dur
+        below_min     = current_dur < min_dur
 
-        can_merge = same_meeting and same_speaker and gap <= gap_thresh and not would_exceed
+        # If the current group is still below min_dur, keep merging even across
+        # gaps larger than gap_thresh (as long as speaker/meeting/max constraints hold).
+        can_merge = (
+            same_meeting
+            and same_speaker
+            and not would_exceed
+            and (gap <= gap_thresh or below_min)
+        )
 
         if can_merge:
             current_group.append(rec)
@@ -197,12 +208,15 @@ def print_stats(label, records):
 # SAMPLING
 # =========================
 def duration_bucket(d):
-    if d < 1:
-        return "short"
-    elif d < 5:
-        return "medium"
+    # Buckets tuned for post-grouping distribution (most rows are >= MIN_DURATION).
+    if d < 10:
+        return "short"    # 5-10s
+    elif d < 15:
+        return "medium"   # 10-15s
+    elif d < 20:
+        return "long"     # 15-20s
     else:
-        return "long"
+        return "xlong"    # 20-25s
 
 def sample_grouped(records, n, seed):
     random.seed(seed)
@@ -264,11 +278,20 @@ if n_filtered:
 
 grouped = group_utterances(records_valid, MIN_DURATION, MAX_DURATION, GAP_THRESHOLD)
 
-# Clamp any groups that slightly exceed MAX_DURATION due to floating point
-over = [r for r in grouped if r["duration"] > MAX_DURATION]
-if over:
-    print(f"Clamping {len(over)} groups that exceed MAX_DURATION")
-    for r in over:
+# Correct only sub-millisecond floating-point drift; crash on meaningful violations
+# so a grouping bug can't silently shrink real audio spans.
+FP_TOLERANCE = 1e-3
+real_over = [r for r in grouped if r["duration"] > MAX_DURATION + FP_TOLERANCE]
+if real_over:
+    raise RuntimeError(
+        f"{len(real_over)} groups exceed MAX_DURATION ({MAX_DURATION}s) by more than "
+        f"{FP_TOLERANCE}s — grouping invariant violated. Example: {real_over[0]['segment_id']} "
+        f"({real_over[0]['duration']:.6f}s)"
+    )
+fp_drift = [r for r in grouped if r["duration"] > MAX_DURATION]
+if fp_drift:
+    print(f"Correcting {len(fp_drift)} groups with sub-ms FP drift over MAX_DURATION")
+    for r in fp_drift:
         r["end_time"] = r["start_time"] + MAX_DURATION
         r["duration"] = MAX_DURATION
 print_stats("Grouped", grouped)
