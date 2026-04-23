@@ -68,12 +68,14 @@ def group_utterances(records, min_dur, max_dur, gap_thresh):
             current_group.append(rec)
             continue
 
-        prev = current_group[-1]
+        prev  = current_group[-1]
+        start = float(current_group[0]["start_time"])
         same_meeting = rec["meeting_id"] == prev["meeting_id"]
         same_speaker  = rec["speaker_id"] == prev["speaker_id"]
         gap           = float(rec["start_time"]) - float(prev["end_time"])
-        current_dur   = float(prev["end_time"]) - float(current_group[0]["start_time"])
-        would_exceed  = current_dur + dur > max_dur
+        current_dur   = float(prev["end_time"]) - start
+        # Prospective span includes the gap we'd be absorbing, not just the utterance durations.
+        would_exceed  = (float(rec["end_time"]) - start) > max_dur
         below_min     = current_dur < min_dur
 
         # If the current group is still below min_dur, keep merging even across
