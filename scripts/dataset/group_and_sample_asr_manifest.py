@@ -13,8 +13,12 @@ MANIFEST_OUT = Path("data/processed/manifests/asr_manifest_grouped.jsonl")
 SAMPLE_OUT   = Path("data/processed/manifests/asr_manifest_grouped_sample.jsonl")
 
 MIN_DURATION  = 5.0   # merge utterances shorter than this (seconds)
-MAX_DURATION  = 25.0  # never exceed this (Whisper's sweet spot is 10-30s)
+MAX_DURATION  = 30.0  # never exceed this (Whisper's sweet spot is 10-30s)
 GAP_THRESHOLD = 3.0   # don't merge if gap between utterances exceeds this (seconds)
+
+# If True, drop grouped records still shorter than MIN_DURATION after grouping
+# (isolated utterances with no same-speaker neighbour within GAP_THRESHOLD).
+DROP_BELOW_MIN_DURATION = False
 
 SAMPLE_N    = 20000   # number of records in the sample
 SAMPLE_SEED = 42
@@ -73,18 +77,17 @@ def group_utterances(records, min_dur, max_dur, gap_thresh):
         same_meeting = rec["meeting_id"] == prev["meeting_id"]
         same_speaker  = rec["speaker_id"] == prev["speaker_id"]
         gap           = float(rec["start_time"]) - float(prev["end_time"])
-        current_dur   = float(prev["end_time"]) - start
         # Prospective span includes the gap we'd be absorbing, not just the utterance durations.
         would_exceed  = (float(rec["end_time"]) - start) > max_dur
-        below_min     = current_dur < min_dur
 
-        # If the current group is still below min_dur, keep merging even across
-        # gaps larger than gap_thresh (as long as speaker/meeting/max constraints hold).
+        # Gaps over gap_thresh always flush the group: the audio in the gap belongs
+        # to other speakers on the Mix-Headset channel, and merging across it pulls
+        # foreign speech into the group (inflates ASR insertions vs. reference text).
         can_merge = (
             same_meeting
             and same_speaker
             and not would_exceed
-            and (gap <= gap_thresh or below_min)
+            and gap <= gap_thresh
         )
 
         if can_merge:
@@ -298,7 +301,20 @@ if fp_drift:
         r["duration"] = MAX_DURATION
 print_stats("Grouped", grouped)
 
-valid = validate_grouped(grouped, records_valid)
+if DROP_BELOW_MIN_DURATION:
+    n_before_drop = len(grouped)
+    kept_seg_ids = {s for g in grouped if g["duration"] >= MIN_DURATION for s in g["grouped_segments"]}
+    grouped = [g for g in grouped if g["duration"] >= MIN_DURATION]
+    n_dropped = n_before_drop - len(grouped)
+    print(f"\nDropped {n_dropped} groups below MIN_DURATION ({MIN_DURATION}s): "
+          f"{n_dropped / n_before_drop * 100:.1f}% of groups")
+    print_stats("Grouped (after drop)", grouped)
+    # Align validation set so the segment-coverage check reflects what should now be present.
+    validation_records = [r for r in records_valid if r["segment_id"] in kept_seg_ids]
+else:
+    validation_records = records_valid
+
+valid = validate_grouped(grouped, validation_records)
 
 if valid:
     write_jsonl(MANIFEST_OUT, grouped)
